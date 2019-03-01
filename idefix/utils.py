@@ -15,6 +15,9 @@ Everything should be highly tested there.
 """
 
 import numpy as np
+import logging
+
+log = logging.getLogger(__name__) 
 
 def first(a):
     """Returns the inverse of the parameter.
@@ -31,6 +34,7 @@ def first(a):
     b : integer
         Inverse of a.
     """
+    log.info('first called.')
     return -a
 
 def bbox(data):
