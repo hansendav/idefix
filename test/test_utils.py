@@ -11,9 +11,12 @@ import numpy as np
 import pytest
 from idefix import utils
 
-def test_first():
-    assert utils.first(1) == -1
-    assert utils.first(-4) == 4
+@pytest.mark.parametrize("first_input,first_expected", [
+    (1, -1),
+    (-4, 4),
+])
+def test_first(first_input, first_expected):
+    assert utils.first(first_input) == first_expected
 
 @pytest.fixture
 def fix_data():
@@ -23,3 +26,7 @@ def fix_data():
 def test_bbox(fix_data):
     res = np.array([fix_data.min(axis=0), fix_data.max(axis=0)])
     assert (utils.bbox(fix_data) == res).all()
+
+def test_read(datadir):
+    with open(datadir.join('first.txt')) as f:
+        assert f.read() == 'hullo\n'
