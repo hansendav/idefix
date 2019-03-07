@@ -9,4 +9,7 @@ Utils and production pipelines for processing LiDAR point clouds.
 
 """
 
-__all__ = ['utils']
+__all__ = ['utils', 'io']
+
+from . import utils
+from . import io

@@ -2,3 +2,4 @@
 doc/_build
 doc/source
 __pycache__
+log/
