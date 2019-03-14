@@ -26,7 +26,7 @@ def load_las(fname):
 
     Parameters
     ----------
-    fname : string, Path
+    fname : str, Path
         Path to the LAS file to load.
 
     Returns
@@ -43,7 +43,12 @@ def load_las(fname):
         raise IOError(msg)
 
     log.info('Loading LAS file \'{}\'...'.format(fname))
-    infile = laspy.file.File(fname)
+    try:
+        infile = laspy.file.File(fname)
+    except Exception as e:
+        msg = 'Laspy exception while opening file \'{}\': {}'.format(fname, e)
+        log.error(msg)
+        raise IOError(msg)
 
     log.debug('Extract spatial data')
     spatial = np.core.records.fromarrays([np.array((infile.x, infile.y, infile.z)).T], 
@@ -72,3 +77,69 @@ def load_las(fname):
     return pcloud
 
 
+def load_txt(fname, header, delimiter=' '):
+    '''Load a text file into idefix point cloud format.
+
+    Read point cloud from text files (CSV like).
+
+    Notes
+    -----
+    This reader needs the column header corresponding to the point cloud. There
+    has to be `x`, `y` and `z` columns in the header.
+
+    Parameters
+    ----------
+    fname : str, Path
+        Path to the text file to load.
+    header : array
+        Names of the columns contained in the text point cloud file.
+    delimiter : str, optional
+        String used to separate values. The default is whitespace.
+        
+    Returns
+    -------
+    pcloud : recarray
+        Point cloud respecting structure::
+
+        [(spatial), (feature, [f1, f2, ..., fn])]
+    '''
+    fname = Path(fname)
+    if not fname.is_file():
+        msg = 'No such file: \'{}\''.format(fname)
+        log.error(msg)
+        raise IOError(msg)
+
+    log.info('Loading TXT file \'{}\'...'.format(fname))
+    try:
+        log.debug('Loading the first lines of \'{}\'...'.format(fname))
+        insight_txt = np.loadtxt(fname, delimiter=delimiter, max_rows=2)
+    except Exception as e:
+        msg = 'Numpy exception while opening file \'{}\': {}'.format(fname, e)
+        log.error(msg)
+        raise IOError(msg)
+
+    # Compare header length and column count
+    if insight_txt.shape[-1] != len(header):
+        msg = 'Mismatch between header and file columns, count {} and count {}'.format(insight_txt.shape[-1], len(header))
+        log.error(msg)
+        raise IOError(msg)
+
+    dtype = [(x, np.float) for x in header]
+    raw_txt = np.loadtxt(fname, delimiter=delimiter, dtype=dtype)
+
+    log.debug('Extract spatial data')
+    spatial = np.core.records.fromarrays([np.array([raw_txt[x] for x in ('x', 'y', 'z')]).T], 
+                                         dtype=[('spatial', np.float, 3)])
+
+    log.debug('Extract feature data')
+    header_c = header.copy()
+    for i in ('x', 'y', 'z'):
+        header_c.remove(i)
+
+    log.debug('Create feature recarray')
+    feature = raw_txt[header_c]
+
+    log.debug('Concatenate pcloud')
+    pcloud = rfn.append_fields(spatial, 'feature', feature, usemask=False, asrecarray=True)
+
+    return pcloud
