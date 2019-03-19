@@ -3,9 +3,9 @@
 # author Florent Guiotte <florent.guiotte@uhb.fr>
 # version 0.0
 # date 04 mars 2019
-"""Abstract
+""" IO IDEFIX sub-package
 
-doc.
+General functions to load and dump data in various format.
 """
 
 import logging
@@ -14,7 +14,7 @@ import numpy as np
 from numpy.lib import recfunctions as rfn
 import laspy
 
-log = logging.getLogger(__name__) 
+log = logging.getLogger(__name__)
 
 def load_las(fname):
     '''Load a LAS file into idefix point cloud format.
@@ -51,7 +51,7 @@ def load_las(fname):
         raise IOError(msg)
 
     log.debug('Extract spatial data')
-    spatial = np.core.records.fromarrays([np.array((infile.x, infile.y, infile.z)).T], 
+    spatial = np.core.records.fromarrays([np.array((infile.x, infile.y, infile.z)).T],
                                          dtype=[('spatial', np.float, 3)])
 
     log.debug('Extract feature data')
@@ -95,7 +95,7 @@ def load_txt(fname, header, delimiter=' '):
         Names of the columns contained in the text point cloud file.
     delimiter : str, optional
         String used to separate values. The default is whitespace.
-        
+
     Returns
     -------
     pcloud : recarray
@@ -128,7 +128,7 @@ def load_txt(fname, header, delimiter=' '):
     raw_txt = np.loadtxt(fname, delimiter=delimiter, dtype=dtype)
 
     log.debug('Extract spatial data')
-    spatial = np.core.records.fromarrays([np.array([raw_txt[x] for x in ('x', 'y', 'z')]).T], 
+    spatial = np.core.records.fromarrays([np.array([raw_txt[x] for x in ('x', 'y', 'z')]).T],
                                          dtype=[('spatial', np.float, 3)])
 
     log.debug('Extract feature data')

@@ -10,7 +10,7 @@ Welcome to Idefix's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+.. _voxels
 
 Indices and tables
 ==================
