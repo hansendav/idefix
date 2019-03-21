@@ -53,8 +53,9 @@ def get_grid(spatial, step):
 
     #ipdb.set_trace()
     grid = []
-    for start, stop, s in zip(bb[0], bb[1], step):
-        grid += [np.arange(start, stop + 2*s, s)]
+    for a_min, a_max, a_s in zip(bb[0], bb[1], step):
+        bins = np.trunc((a_max - a_min) / a_s).astype(int) + 1
+        grid += [np.linspace(a_min, a_min + bins * a_s, bins + 1)]
 
     return grid
 
