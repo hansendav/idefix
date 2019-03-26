@@ -91,7 +91,7 @@ def load_txt(fname, header, delimiter=' '):
     ----------
     fname : str, Path
         Path to the text file to load.
-    header : array
+    header : array, tuple
         Names of the columns contained in the text point cloud file.
     delimiter : str, optional
         String used to separate values. The default is whitespace.
@@ -132,7 +132,7 @@ def load_txt(fname, header, delimiter=' '):
                                          dtype=[('spatial', np.float, 3)])
 
     log.debug('Extract feature data')
-    header_c = header.copy()
+    header_c = list(header)
     for i in ('x', 'y', 'z'):
         header_c.remove(i)
 

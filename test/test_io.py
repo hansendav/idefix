@@ -66,6 +66,11 @@ def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_co
     except IOError:
         pytest.fail('Opening legit file without exception')
 
+    try:
+        result = io.load_txt(fname, tuple(head), separator)
+    except Exception:
+        pytest.fail('Opening legit file with legit header')
+
     assert result.size == exp_point_count, "Return correct point count"
 
     assert result['spatial'].shape[-1] == 3, "Return ndarray with spatial field"
