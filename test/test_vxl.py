@@ -132,3 +132,28 @@ def test_bin(datadir, grid_id, set_id, method):
     assert test.shape == tuple([x.size - 1 for x in grid]), 'Voxel grid shape and test grid missmatch'
     assert (test.mask == truth.mask).all(), 'The returned mask is different from test truth'
     assert np.allclose(test.compressed(), truth.compressed()), 'The returned values are different from test truth'
+
+@pytest.mark.parametrize('set_id, grid_id, cells', [
+    ('0', '1', 1000),
+    ('0', '2', 125),
+    ('0', '0_1', 753571),
+    ('0', '0_15', 226981),
+])
+def test__bin_insight(datadir, set_id, grid_id, cells):
+    grid = data_grid(datadir, set_id, grid_id)
+    assert vxl._bin_insight(grid) is not None, 'Tested function did not return anything :('
+    assert vxl._bin_insight(grid) == cells, 'Private insight function did not return the correct number of cells for grid'
+
+@pytest.mark.parametrize('method', [
+    ('density'), ('mean'), ('mode')])
+def test_insight(method):
+    # Create a huge grid
+    grid = [np.arange(1, 10, .0001)] * 3
+    with pytest.raises(MemoryError) as e_info:
+        vxl.insight(grid, method=method, mem_limit='3GB')
+    with pytest.raises(MemoryError) as e_info:
+        vxl.insight(grid, method=method, mem_limit='300 MB')
+    with pytest.raises(MemoryError) as e_info:
+        vxl.insight(grid, method=method, mem_limit='3KB')
+    with pytest.raises(MemoryError) as e_info:
+        vxl.insight(grid, method=method, mem_limit=3000)

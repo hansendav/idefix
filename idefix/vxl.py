@@ -10,6 +10,7 @@ General functions to transform point clouds to voxels compatible with numpy.
 
 import logging
 import numpy as np
+import humanize
 from .utils import bbox
 import ipdb
 
@@ -153,7 +154,93 @@ def _bin_mode(grid, spatial, feature):
         winner = score > max_score
         max_score[winner] = score[winner]
         max_value[winner] = value
-        del score, winner
+        del score, winner, mask
 
     return np.ma.masked_array(max_value, max_score == 0)
 
+def _bin_insight(grid):
+    '''Return the predicted number of cells contained in grid.
+    '''
+    return np.prod([x.size - 1 for x in grid])
+
+def _bin_density_insight(grid, dtype=np.float):
+    density = np.dtype(dtype).itemsize
+    res_data = density
+    res_mask = np.dtype(np.bool).itemsize
+    return _bin_insight(grid) * (density + res_data + res_mask)
+
+def _bin_mean_insight(grid, feature=None):
+    density = np.dtype(np.float).itemsize
+    weight = np.dtype(np.float).itemsize
+    mask = np.dtype(np.bool).itemsize
+    res_data = np.dtype(np.float).itemsize
+    res_mask = np.dtype(np.float).itemsize
+    return (density + weight + mask + res_data + res_mask) * _bin_insight(grid)
+
+def _bin_mode_insight(grid, feature=None):
+    max_score = np.dtype(np.float).itemsize
+    max_value = np.dtype(np.float).itemsize
+    score = np.dtype(np.float).itemsize
+    winner = np.dtype(np.bool).itemsize
+    res_data = np.dtype(np.float).itemsize
+    res_mask = np.dtype(np.bool).itemsize
+    return _bin_insight(grid) * (max_score + max_value + max(score + winner, res_data + res_mask))
+
+def insight(grid, feature=None, method='density', mem_limit=None):
+    '''Display memory usage of binning process.
+
+    Display in the logs (INFO level) the predicted memory usage needed by the
+    binning process. If `mem_limit` is set, then the method will throw an
+    exception (MemoryError) if the prediction exceed the limit.
+
+    Parameters
+    ----------
+    grid : array of array (n,)
+        Grid to bin spatial data.
+    feature : array (m)
+        Point feature to represent in the bins. If None, default float values
+        are assumed.
+    method : str
+        Method to synthetize the point features in the grid.
+    mem_limit : number, str
+        The limit allowed to further process the grid. If the insight
+        prediction exceed this limit a MemoryError is raised. If the parameter
+        is a string, it can be set with human readable memory size (e.g.
+        '3GB'). The default is bytes.
+
+    Return
+    ------
+    mem_usage : number
+        The future RAM usage required to further process the data binning.
+    '''
+    if mem_limit is not None:
+        mem_limit = _human_to_bytes(mem_limit) if isinstance(mem_limit, str) else mem_limit
+
+    if method == 'density':
+        mem_usage = _bin_density_insight(grid)
+    elif method == 'mean':
+        mem_usage = _bin_mean_insight(grid, feature)
+    elif method == 'mode':
+        mem_usage = _bin_mode_insight(grid, feature)
+    else:
+        raise IOError('Wrong method: \'{}\''.format(method))
+
+    log.info('--- GRID INSIGHT ---')
+    log.info('Grid size:     \t{}'.format([x.size - 1 for x in grid]))
+    log.info('Number of cells:\t{}'.format(humanize.intword(_bin_insight(grid))))
+    log.info('Predicted RAM usage:\t{}'.format(humanize.naturalsize(mem_usage, binary=True)))
+    log.info('Allowed max RAM usage:\t{}'.format(humanize.naturalsize(mem_limit, binary=True) if mem_limit else 'Not set'))
+    humanize.naturalsize(mem_usage)
+    log.info('--------------------')
+
+    if mem_limit and mem_usage > mem_limit:
+        msg = 'The memory requirement is higher than allowed memory'
+        log.error(msg)
+        raise MemoryError(msg)
+
+def _human_to_bytes(human_size):
+    bytes_count = {'KB': 1, 'MB': 2, 'GB': 3}
+    for k, v in bytes_count.items():
+        if human_size.endswith(k):
+            return float(human_size.strip(k)) * 1024 ** v
+    raise IOError('Did not understand size: \'{}\''.format(human_size))
