@@ -22,7 +22,7 @@ def _ui_step(step, spatial):
     try:
         iter(step)
         if len(step) != spatial.shape[-1]:
-            msg = 'Missmatch between steps count and spatial dimensions, {} step(s) expected while step = \'{}\''.format(spatial.shape[-1], step)
+            msg = 'Missmatch between steps count and spatial dimensions, {} step(s) expected while step = \'{}\'.'.format(spatial.shape[-1], step)
             log.error(msg)
             raise ValueError(msg)
         out_step = step
@@ -31,7 +31,7 @@ def _ui_step(step, spatial):
 
     for s in out_step:
         if s <= 0:
-            msg = 'Step should be greater than 0, steps = \'{}\''.format(step)
+            msg = 'Step should be greater than 0, steps = \'{}\'.'.format(step)
             log.error(msg)
             raise ValueError(msg)
     return out_step
@@ -105,7 +105,7 @@ def bin(grid, spatial, feature=None, method='density'):
         return _bin_density(grid, spatial)
     else:
         if feature is None:
-            msg = 'Missing required argument : \'feature\''
+            msg = 'Missing required argument : \'feature\'.'
             log.error(msg)
             raise ValueError(msg)
     if method == 'mean':
@@ -186,7 +186,7 @@ def _bin_mode_insight(grid, feature=None):
     res_mask = np.dtype(np.bool).itemsize
     return _bin_insight(grid) * (max_score + max_value + max(score + winner, res_data + res_mask))
 
-def insight(grid, feature=None, method='density', mem_limit=None):
+def insight(grid, feature=None, method='density', mem_limit=None, verbose=False):
     '''Display memory usage of binning process.
 
     Display in the logs (INFO level) the predicted memory usage needed by the
@@ -207,6 +207,8 @@ def insight(grid, feature=None, method='density', mem_limit=None):
         prediction exceed this limit a MemoryError is raised. If the parameter
         is a string, it can be set with human readable memory size (e.g.
         '3GB'). The default is bytes.
+    verbose : bool
+        Display on stdout (besides logging) the insights. Default is False.
 
     Return
     ------
@@ -225,18 +227,30 @@ def insight(grid, feature=None, method='density', mem_limit=None):
     else:
         raise IOError('Wrong method: \'{}\''.format(method))
 
-    log.info('--- GRID INSIGHT ---')
-    log.info('Grid size:     \t{}'.format([x.size - 1 for x in grid]))
-    log.info('Number of cells:\t{}'.format(humanize.intword(_bin_insight(grid))))
-    log.info('Predicted RAM usage:\t{}'.format(humanize.naturalsize(mem_usage, binary=True)))
-    log.info('Allowed max RAM usage:\t{}'.format(humanize.naturalsize(mem_limit, binary=True) if mem_limit else 'Not set'))
-    humanize.naturalsize(mem_usage)
-    log.info('--------------------')
+    lines = _print_insight(grid, mem_usage, mem_limit)
+
+    for l in lines:
+        log.info(l)
+
+    if verbose:
+        print('\n'.join(lines))
 
     if mem_limit and mem_usage > mem_limit:
-        msg = 'The memory requirement is higher than allowed memory'
+        msg = 'The memory requirement is higher than allowed memory usage.'
         log.error(msg)
         raise MemoryError(msg)
+
+    return mem_usage
+
+def _print_insight(grid, mem_usage, mem_limit):
+    print_lines = [
+    '--- GRID INSIGHT ---',
+    'Grid shape:     \t{}'.format([x.size - 1 for x in grid]),
+    'Number of cells:\t{}'.format(humanize.intword(_bin_insight(grid))),
+    'Predicted RAM usage:\t{}'.format(humanize.naturalsize(mem_usage, binary=True)),
+    'Allowed max RAM usage:\t{}'.format(humanize.naturalsize(mem_limit, binary=True) if mem_limit else 'Not set'),
+    '--------------------',]
+    return print_lines
 
 def _human_to_bytes(human_size):
     bytes_count = {'KB': 1, 'MB': 2, 'GB': 3}
