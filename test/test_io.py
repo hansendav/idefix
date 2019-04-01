@@ -41,14 +41,15 @@ def test_load_las(datadir, fname, exp_point_count, exp_field_count):
 
     assert result.spatial.dtype == np.float, "Dtype of spatial is np.float"
 
-@pytest.mark.parametrize('fname, head, separator, exp_point_count, exp_field_count', [
+@pytest.mark.parametrize('fname, head, separator, exp_point_count, exp_field_count, dtype', [
     # TODO: test different LAS version
     # TODO: test LAS without field
-    ('test.txt', ['x', 'y', 'z', 'class', 'intensity'], ',', 58629, 2, ),
-    ('test_b.txt', ['x', 'y', 'z', 'class', 'intensity'], ' ', 58629, 2, ),
+    ('test.txt', ['x', 'y', 'z', 'class', 'intensity'], ',', 58629, 2, None),
+    ('test_b.txt', ['x', 'y', 'z', 'class', 'intensity'], ' ', 58629, 2, None),
+    ('test.txt', ['x', 'y', 'z', 'class', 'intensity'], ',', 58629, 2, [np.float, np.float, np.float, np.uint8, np.uint8]),
     #('test.laz', 58629, 3, ),
 ])
-def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_count):
+def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_count, dtype):
     fname = datadir.join(fname)
     
     # Raise "No such file"
@@ -67,7 +68,7 @@ def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_co
         pytest.fail('Opening legit file without exception')
 
     try:
-        result = io.load_txt(fname, tuple(head), separator)
+        result = io.load_txt(fname, tuple(head), separator, dtype)
     except Exception:
         pytest.fail('Opening legit file with legit header')
 
@@ -80,3 +81,7 @@ def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_co
     assert len(result['feature'].dtype) == exp_field_count, "Return ndarray with attribute fields"
 
     assert result.spatial.dtype == np.float, "Dtype of spatial is np.float"
+
+    if dtype is not None:
+        for feature_name, feature_dtype in zip(head[3:], dtype[3:]):
+            assert result.feature[feature_name].dtype == feature_dtype, "Missmatch between specified dtype and returned feature dtype"

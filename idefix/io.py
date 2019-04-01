@@ -77,7 +77,7 @@ def load_las(fname):
     return pcloud
 
 
-def load_txt(fname, header, delimiter=' '):
+def load_txt(fname, header, delimiter=' ', dtype=None):
     '''Load a text file into idefix point cloud format.
 
     Read point cloud from text files (CSV like).
@@ -95,6 +95,9 @@ def load_txt(fname, header, delimiter=' '):
         Names of the columns contained in the text point cloud file.
     delimiter : str, optional
         String used to separate values. The default is whitespace.
+    dtype : array, tuple
+        Data types of the columns contained in the file. This list must match
+        the `header` parameter. Default is None, data type inferred is float.
 
     Returns
     -------
@@ -108,6 +111,9 @@ def load_txt(fname, header, delimiter=' '):
         msg = 'No such file: \'{}\''.format(fname)
         log.error(msg)
         raise IOError(msg)
+
+    if dtype is not None:
+        assert len(dtype) == len(header), 'dtype and header must be the same size'
 
     log.info('Loading TXT file \'{}\'...'.format(fname))
     try:
@@ -124,8 +130,9 @@ def load_txt(fname, header, delimiter=' '):
         log.error(msg)
         raise IOError(msg)
 
-    dtype = [(x, np.float) for x in header]
-    raw_txt = np.loadtxt(fname, delimiter=delimiter, dtype=dtype)
+    dtype = (np.float,) * len(header) if not dtype else dtype
+    processed_dtype = [(x, y) for x, y in zip(header, dtype)]
+    raw_txt = np.loadtxt(fname, delimiter=delimiter, dtype=processed_dtype)
 
     log.debug('Extract spatial data')
     spatial = np.core.records.fromarrays([np.array([raw_txt[x] for x in ('x', 'y', 'z')]).T],
