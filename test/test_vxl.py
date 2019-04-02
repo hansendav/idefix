@@ -157,3 +157,30 @@ def test_insight(method):
         vxl.insight(grid, method=method, mem_limit='3KB')
     with pytest.raises(MemoryError) as e_info:
         vxl.insight(grid, method=method, mem_limit=3000)
+
+def test__geo_to_np_coordinate():
+    raster = np.zeros((5, 5), dtype=np.uint8)
+    raster[0, 0] = 42
+    raster[4, 4] = 25
+    raster[2, 0] = 7
+
+    raster_truth = np.zeros_like(raster)
+    raster_truth[-1, 0] = 42
+    raster_truth[0, -1] = 25
+    raster_truth[-1, 2] = 7
+
+    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 2D raters' 
+
+    raster = np.zeros((5, 5, 3), dtype=np.uint8)
+    raster[0, 0, 0] = 42
+    raster[4, 4, 1] = 25
+    raster[2, 0, 2] = 7
+
+    raster_truth = np.zeros_like(raster)
+    raster_truth[-1, 0, 0] = 42
+    raster_truth[0, -1, 1] = 25
+    raster_truth[-1, 2, 2] = 7
+
+    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 3D raters' 
+
+

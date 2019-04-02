@@ -102,20 +102,21 @@ def bin(grid, spatial, feature=None, method='density'):
     log.info('Bining point cloud in grid...')
 
     if method == 'density':
-        return _bin_density(grid, spatial)
+        geo_rst = _bin_density(grid, spatial)
     else:
         if feature is None:
             msg = 'Missing required argument : \'feature\'.'
             log.error(msg)
             raise ValueError(msg)
-    if method == 'mean':
-        return _bin_mean(grid, spatial, feature)
-    if method == 'mode':
-        return _bin_mode(grid, spatial, feature)
-
-    msg = 'Method \'{}\' does not exist.'.format(method)
-    log.error(msg)
-    raise NotImplementedError(msg)
+        if method == 'mean':
+            geo_rst = _bin_mean(grid, spatial, feature)
+        elif method == 'mode':
+            geo_rst = _bin_mode(grid, spatial, feature)
+        else:
+            msg = 'Method \'{}\' does not exist.'.format(method)
+            log.error(msg)
+            raise NotImplementedError(msg)
+    return _geo_to_np_coordinate(geo_rst)
 
 def _bin_density(grid, spatial):
     '''Bin spatial in a grid, density method.
@@ -258,3 +259,13 @@ def _human_to_bytes(human_size):
         if human_size.endswith(k):
             return float(human_size.strip(k)) * 1024 ** v
     raise IOError('Did not understand size: \'{}\''.format(human_size))
+
+def _geo_to_np_coordinate(raster):
+    '''Geographic to numpy coordinate system.
+    
+    Transfer the raster (2D and 3D) from a geographic coordinate system to the
+    numpy coordinate system.
+    '''
+    return np.flip(np.swapaxes(raster, 0, 1), 0)
+
+
