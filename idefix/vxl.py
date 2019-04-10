@@ -262,10 +262,81 @@ def _human_to_bytes(human_size):
 
 def _geo_to_np_coordinate(raster):
     '''Geographic to numpy coordinate system.
-    
+
     Transfer the raster (2D and 3D) from a geographic coordinate system to the
     numpy coordinate system.
     '''
     return np.flip(np.swapaxes(raster, 0, 1), 0)
 
+def _squash_position(voxel_grid, method, axis):
+    squash_mask = np.zeros_like(voxel_grid, dtype=np.int)
+    mask_idx = (~voxel_grid.mask).nonzero()
+    squash_mask[mask_idx] = mask_idx[axis]
+
+    if method == 'top':
+        squash_id = squash_mask.max(axis=axis).astype(np.uint)
+    elif method == 'center':
+        squash_id = np.ma.median(squash_mask, axis=axis).astype(np.uint)
+    elif method == 'bottom':
+        squash_id = squash_mask.min(axis=axis).astype(np.uint)
+
+    xy_where = np.nonzero(~squash_id.mask)
+    voxel_grid_where = list(xy_where)
+    voxel_grid_where.insert(axis%(len(voxel_grid_where)+1), squash_id.compressed())
+
+    raster = np.zeros_like(squash_id)
+    raster[xy_where] = voxel_grid[tuple(voxel_grid_where)]
+
+    return raster
+
+def squash(voxel_grid, method='top', axis=-1):
+    """Flatten a voxel grid.
+
+    Squash the voxel grid along `axis` according to `method` into a raster.
+
+    The squash methods proposed are :
+
+    - Position based in the "column" (i.e. along axis).
+        + 'top': The first non empty cells (from top) is returned.
+        + 'center': The most centered cell is returned.
+        + 'bottom': The last
+    - Cell description in the "column".
+        + 'count': The number of non empty cells.
+        + 'mean': The mean value of the non empty cells.
+        + 'median': The median value...
+        + 'std': ...
+        + 'min': ...
+        + 'max': ...
+
+    Parameters
+    ----------
+    voxel_grid : masked array (3D)
+        The voxel grid (binned point cloud) to squash.
+    method : str
+        The squash method. It can be 'top', 'center', 'bottom', 'count', 'min',
+        'mean', 'max', 'std' or 'median'. Default is 'top'.
+    axis : number
+        The axis to squash along. Default is last (i.e. 2 for 3D voxel grid).
+
+    Return
+    ------
+    raster_grid : masked array (2D)
+        The squashed raster.
+    """
+    if method in ('top', 'center', 'bottom'):
+        return _squash_position(voxel_grid, method, axis)
+    elif method == 'count':
+        return ~voxel_grid.mask.sum(axis=axis)
+    elif method == 'mean':
+        return voxel_grid.mean(axis=axis)
+    elif method == 'median':
+        return np.ma.median(voxel_grid, axis=axis)
+    elif method == 'min':
+        return voxel_grid.min(axis=axis)
+    elif method == 'max':
+        return voxel_grid.max(axis=axis)
+    elif method == 'std':
+        return voxel_grid.std(axis=axis)
+    
+    raise NotImplementedError('Method \'{}\' does not exist.'.format(method))
 

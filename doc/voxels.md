@@ -39,11 +39,11 @@ Voxels data
     + Orientation PCA
     + Normals
 - Feature distribution
-    + **Mean**
-    + Variance
-    + **Mode**
+    + **Mean**: Reduce noise in the cell
+    + Variance: Characterize the distribution of the data
+    + **Mode**: Return the majority value (e.g. labels)
     + Entropy
-    + Min
+    + *Min*: To create last echoes map
     + Max
     + Quantil
 

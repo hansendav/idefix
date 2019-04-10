@@ -39,7 +39,7 @@ def data_vxl(datadir, set_id, grid_id, method):
 
         i = fields.index(feature_name)
 
-        data = np.loadtxt('test/test_vxl/pc0_vxl_s1.txt')
+        data = np.loadtxt(fname)
         spatial = data[:,:3].astype(np.intp)
         feature = data[:,i]
 
@@ -47,6 +47,14 @@ def data_vxl(datadir, set_id, grid_id, method):
 
     path = datadir.join('pc{}_vxl_s{}.txt'.format(set_id, grid_id))
     return _load_vxl(path, method)
+
+def data_raster(datadir, set_id, grid_id, axis, method):
+    def _load_raster(fname):
+        data = np.loadtxt(fname)
+        return np.ma.masked_array(data, data==0)
+
+    path = datadir.join('pc{}_vxl_s{}_raster_{}_{}.txt'.format(set_id, grid_id, axis, method))
+    return _load_raster(path)
 
 def data_grid(datadir, set_id, step_id):
     def _read(fname):
@@ -183,4 +191,26 @@ def test__geo_to_np_coordinate():
 
     assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 3D raters' 
 
+@pytest.mark.parametrize('set_id, grid_id, axis, method', [
+    (1, 1, 2, 'top'),
+    (1, 1, 2, 'center'),
+    (1, 1, 2, 'bottom'),
+    (1, 1, 2, 'mean'),
+    (1, 1, 2, 'max'),
+    (1, 1, 2, 'min'),
+    (1, 1, 2, 'median'),
+    (1, 1, 0, 'top'),
+    (1, 1, 0, 'center'),
+    (1, 1, 0, 'bottom'),
+    (1, 1, 1, 'top'),
+    (1, 1, 1, 'center'),
+    (1, 1, 1, 'bottom'),
+])
+def test_squash(datadir, set_id, grid_id, axis, method):
+    vxld = data_vxl(datadir, set_id, grid_id, 'density' )
+    truth = data_raster(datadir, set_id, grid_id, axis, method)
+    res = vxl.squash(vxld, method, axis)
 
+    assert res is not None, 'Tested function did not return anything :('
+    assert res.shape == truth.shape, 'Missmatch between truth and tested shape'
+    assert np.allclose(res, truth), 'Missmatch between truth and tested raster'
