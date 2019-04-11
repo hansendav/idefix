@@ -237,7 +237,9 @@ def insight(grid, feature=None, method='density', mem_limit=None, verbose=False)
         print('\n'.join(lines))
 
     if mem_limit and mem_usage > mem_limit:
-        msg = 'The memory requirement is higher than allowed memory usage.'
+        msg = 'The memory requirement is higher than\
+               maximum authorized memory usage ({} GB needed).'.format(
+                       humanize.naturalsize(mem_usage, binary=True))
         log.error(msg)
         raise MemoryError(msg)
 
@@ -249,7 +251,7 @@ def _print_insight(grid, mem_usage, mem_limit):
     'Grid shape:     \t{}'.format([x.size - 1 for x in grid]),
     'Number of cells:\t{}'.format(humanize.intword(_bin_insight(grid))),
     'Predicted RAM usage:\t{}'.format(humanize.naturalsize(mem_usage, binary=True)),
-    'Allowed max RAM usage:\t{}'.format(humanize.naturalsize(mem_limit, binary=True) if mem_limit else 'Not set'),
+    'Max allowed RAM usage:\t{}'.format(humanize.naturalsize(mem_limit, binary=True) if mem_limit else 'Not set'),
     '--------------------',]
     return print_lines
 
@@ -326,7 +328,7 @@ def squash(voxel_grid, method='top', axis=-1):
     if method in ('top', 'center', 'bottom'):
         return _squash_position(voxel_grid, method, axis)
     elif method == 'count':
-        return ~voxel_grid.mask.sum(axis=axis)
+        return np.sum(~voxel_grid.mask, axis=axis)
     elif method == 'mean':
         return voxel_grid.mean(axis=axis)
     elif method == 'median':

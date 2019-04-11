@@ -143,6 +143,9 @@ def load_txt(fname, header, delimiter=' ', dtype=None):
     for i in ('x', 'y', 'z'):
         header_c.remove(i)
 
+    if not header_c:
+        return spatial
+
     log.debug('Create feature recarray')
     feature = raw_txt[header_c]
 
