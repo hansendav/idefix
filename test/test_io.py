@@ -85,3 +85,30 @@ def test_load_txt(datadir, fname, head, separator, exp_point_count, exp_field_co
     if dtype is not None:
         for feature_name, feature_dtype in zip(head[3:], dtype[3:]):
             assert result.feature[feature_name].dtype == feature_dtype, "Missmatch between specified dtype and returned feature dtype"
+
+@pytest.mark.parametrize('fname, exp_point_count, exp_field_count', [
+    ('test.npz', 58629, 2, ),
+    ('test_compressed.npz', 58629, 2,),
+])
+def test_load_pc(datadir, fname, exp_point_count, exp_field_count):
+    fname = datadir.join(fname)
+    
+    # Raise "No such file"
+    with pytest.raises(IOError) as e_info:
+        io.load_pc('not_as_file.las')
+
+    # Open file without exception
+    try:
+        result = io.load_pc(fname)
+    except IOError:
+        pytest.fail('Opening legit file without exception')
+
+    assert result.size == exp_point_count, "Return correct point count"
+
+    assert result['spatial'].shape[-1] == 3, "Return ndarray with spatial field"
+
+    assert (result['spatial'] == result.spatial).all(), "Quick access with records array"
+
+    assert len(result['feature'].dtype) == exp_field_count, "Return ndarray with attribute fields"
+
+    assert result.spatial.dtype == np.float, "Dtype of spatial is np.float"

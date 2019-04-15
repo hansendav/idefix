@@ -12,7 +12,7 @@ import logging
 import numpy as np
 import humanize
 from .utils import bbox
-import ipdb
+import mayavi.mlab as mlab
 
 log = logging.getLogger(__name__)
 
@@ -270,6 +270,9 @@ def _geo_to_np_coordinate(raster):
     '''
     return np.flip(np.swapaxes(raster, 0, 1), 0)
 
+def _np_to_geo_coordinate(raster):
+    return np.swapaxes(np.flip(raster, 0), 1, 0)
+
 def _squash_position(voxel_grid, method, axis):
     squash_mask = np.zeros_like(voxel_grid, dtype=np.int)
     mask_idx = (~voxel_grid.mask).nonzero()
@@ -342,3 +345,37 @@ def squash(voxel_grid, method='top', axis=-1):
     
     raise NotImplementedError('Method \'{}\' does not exist.'.format(method))
 
+def plot(voxel_grid, vmin=None, vmax=None):
+    """Plot voxel grid with Mayavi.
+
+    Parameters
+    ----------
+    voxel_grid : masked array (3D)
+        The voxel grid to plot.
+    vmin, vmax : scalar, optional
+        Define the data range that the colormap cover.
+
+    Returns
+    -------
+    figure : mlab figure
+        The figure instance.
+
+    Examples
+    --------
+    >>> a = np.random.random((10,10,10))
+    >>> view = {}
+    >>> mlab.clf()
+    >>> vxl.plot(a)
+    >>> mlab.view(**view)
+    >>> mlab.savefig(fname, magnification=4)
+    >>> mlab.show()
+    """
+    points = np.where(~voxel_grid.mask)
+
+    if vmin or vmax:
+        disp_value = np.clip(voxel_grid[points], vmin, vmax)
+    else:
+        disp_value = voxel_grid[points]
+
+    voxels_display = mlab.points3d(*points, disp_value, mode='cube', scale_factor=1, scale_mode='none', opacity=1., colormap='viridis')
+    return voxels_display

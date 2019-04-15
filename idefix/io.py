@@ -11,6 +11,7 @@ General functions to load and dump data in various format.
 import logging
 from pathlib import Path
 import numpy as np
+import numpy.core.records as rcd
 from numpy.lib import recfunctions as rfn
 import laspy
 
@@ -36,11 +37,7 @@ def load_las(fname):
 
         [(spatial), (feature, [f1, f2, ..., fn])]
     '''
-    fname = Path(fname)
-    if not fname.is_file():
-        msg = 'No such file: \'{}\''.format(fname)
-        log.error(msg)
-        raise IOError(msg)
+    fname = _get_verify_path(fname)
 
     log.info('Loading LAS file \'{}\'...'.format(fname))
     try:
@@ -106,11 +103,7 @@ def load_txt(fname, header, delimiter=' ', dtype=None):
 
         [(spatial), (feature, [f1, f2, ..., fn])]
     '''
-    fname = Path(fname)
-    if not fname.is_file():
-        msg = 'No such file: \'{}\''.format(fname)
-        log.error(msg)
-        raise IOError(msg)
+    fname = _get_verify_path(fname)
 
     if dtype is not None:
         assert len(dtype) == len(header), 'dtype and header must be the same size'
@@ -153,3 +146,50 @@ def load_txt(fname, header, delimiter=' ', dtype=None):
     pcloud = rfn.append_fields(spatial, 'feature', feature, usemask=False, asrecarray=True)
 
     return pcloud
+
+def _get_verify_path(fname):
+    fname = Path(fname)
+    if not fname.is_file():
+        msg = 'No such file: \'{}\''.format(fname)
+        log.error(msg)
+        raise IOError(msg)
+    return fname
+
+def _arr_to_rec(arr):
+    """Array to record array.
+
+    Used for point clouds, should work for everything else tho...
+    """
+    arrays = []; dtypes = []
+    for k in arr.dtype.fields.keys():
+        arrays += [arr[k]]
+        dtypes += [(k, arr.dtype[k])]
+    return np.core.records.fromarrays(arrays, dtypes)
+
+def load_pc(fname):
+    """Load point cloud from file.
+    
+    Loader for point clouds containted in '.pc', '.pcz' or compatible '.npy',
+    '.npz' files. This "point cloud" format is based on NumPy files, with small
+    overhead to manage record array and multispectral point clouds.
+
+    Parameters
+    ----------
+    fname : str, Path
+        Path to the point cloud file to load.
+
+    Returns
+    -------
+    point_cloud : recarray or tuple of recarray
+        The point cloud respecting or tuple of point clouds (for multispectral
+        point cloud files).
+    """
+    log.info('Loading point cloud file \'{}\')'.format(fname))
+
+    fname = _get_verify_path(fname)
+
+    archive = np.load(fname)
+    if len(archive.files) == 1:
+        return _arr_to_rec(archive[archive.files[0]])
+    else:
+        return tuple(_arr_to_rec(archive[arr]) for arr in archive.files)
