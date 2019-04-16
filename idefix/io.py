@@ -169,9 +169,9 @@ def _arr_to_rec(arr):
 def load_pc(fname):
     """Load point cloud from file.
     
-    Loader for point clouds containted in '.pc', '.pcz' or compatible '.npy',
-    '.npz' files. This "point cloud" format is based on NumPy files, with small
-    overhead to manage record array and multispectral point clouds.
+    Loader for point clouds containted in compatible '.npz' files. This "point
+    cloud" format is based on NumPy files, with small overhead to manage record
+    array and multispectral point clouds.
 
     Parameters
     ----------
@@ -181,8 +181,8 @@ def load_pc(fname):
     Returns
     -------
     point_cloud : recarray or tuple of recarray
-        The point cloud respecting or tuple of point clouds (for multispectral
-        point cloud files).
+        The point cloud or tuple of point clouds (for multispectral point cloud
+        files).
     """
     log.info('Loading point cloud file \'{}\')'.format(fname))
 
@@ -193,3 +193,25 @@ def load_pc(fname):
         return _arr_to_rec(archive[archive.files[0]])
     else:
         return tuple(_arr_to_rec(archive[arr]) for arr in archive.files)
+
+def dump_pc(fname, point_cloud, compress=False):
+    """Dump point cloud to file.
+    
+    Write a point cloud (or several point clouds) in a '.npz' files.
+
+    Parameters
+    ----------
+    fname : str, Path
+        Path to the point cloud file to create.
+    point_cloud : recarray or tuple of recarray
+        The point cloud (or the tuple of point clouds) to dump.
+    compress : bool
+        Enable compression of the dumped file. Default is False.
+    """
+    if hasattr(point_cloud, 'spatial'):
+        point_cloud = (point_cloud, )
+
+    if compress:
+        np.savez_compressed(fname, *point_cloud)
+    else:
+        np.savez(fname, *point_cloud)
