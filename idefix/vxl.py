@@ -289,7 +289,7 @@ def _squash_position(voxel_grid, method, axis):
     voxel_grid_where = list(xy_where)
     voxel_grid_where.insert(axis%(len(voxel_grid_where)+1), squash_id.compressed())
 
-    raster = np.zeros_like(squash_id)
+    raster = np.zeros_like(squash_id, dtype=voxel_grid.dtype)
     raster[xy_where] = voxel_grid[tuple(voxel_grid_where)]
 
     return raster
