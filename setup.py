@@ -11,10 +11,11 @@
 from distutils.core import setup
 
 setup(name='idefix',
-      version='0.0',
+      version='1.3',
       description='Utils and processing pipelines for LiDAR point clouds',
       author='Florent Guiotte',
       author_email='florent.guiotte@uhb.fr',
       url='https://git.guiotte.fr/Florent/Idefix',
-      packages=['idefix'],
+      packages=['idefix', 'idefix.tools'],
+      entry_points = {'console_scripts':['txt2npz = idefix.tools.txt_to_npz:main',]},
       )
