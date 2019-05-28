@@ -131,7 +131,8 @@ def _bin_mean(grid, spatial, feature):
     density, edge = np.histogramdd(spatial, grid)
     weightd, edge = np.histogramdd(spatial, grid, weights=feature)
     mask = density == 0
-    return np.ma.masked_array(np.divide(weightd, density, where=~mask), mask)
+    return np.ma.masked_array(np.divide(weightd, density, where=~mask),
+                              mask, dtype=feature.dtype)
 
 def _bin_mode(grid, spatial, feature):
     '''Bin spatial in a grid, mode method.
