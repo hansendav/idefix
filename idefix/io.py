@@ -64,6 +64,14 @@ def load_las(fname):
             feature_data.append(att)
             feature_dtype.append((spec.name, att.dtype))
 
+    # XXX: Workaround missing num_returns in header
+    try:
+        att = infile.num_returns
+        feature_data.append(att)
+        feature_dtype.append(('num_returns', att.dtype))
+    except Exception:
+        pass
+
     log.debug('Create feature recarray')
     feature = np.core.records.fromarrays(feature_data, dtype=feature_dtype)
     del feature_data, feature_dtype
