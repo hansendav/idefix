@@ -11,7 +11,7 @@
 from distutils.core import setup
 
 setup(name='idefix',
-      version='1.3',
+      version='1.4',
       description='Utils and processing pipelines for LiDAR point clouds',
       author='Florent Guiotte',
       author_email='florent.guiotte@uhb.fr',
