@@ -15,8 +15,8 @@ from idefix import io
 @pytest.mark.parametrize('fname, exp_point_count, exp_field_count', [
     # TODO: test different LAS version
     # TODO: test LAS without field
-    ('test.las', 58629, 3, ),
-    #('test.laz', 58629, 3, ),
+    ('test.las', 58629, 4, ),
+    ('test.laz', 58629, 4, ),
 ])
 def test_load_las(datadir, fname, exp_point_count, exp_field_count):
     fname = datadir.join(fname)
