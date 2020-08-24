@@ -8,14 +8,34 @@
 #
 # TODO details
 
-from distutils.core import setup
+import setuptools
 
-setup(name='idefix',
-      version='1.4',
-      description='Utils and processing pipelines for LiDAR point clouds',
-      author='Florent Guiotte',
-      author_email='florent.guiotte@uhb.fr',
-      url='https://git.guiotte.fr/Florent/Idefix',
-      packages=['idefix', 'idefix.tools'],
-      entry_points = {'console_scripts':['txt2npz = idefix.tools.txt_to_npz:main',]},
+with open('README.md', 'r') as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name='idefix',
+    version='0.1.4',
+    description='Utils and processing pipelines for LiDAR point clouds',
+    author='Florent Guiotte',
+    author_email='florent.guiotte@uhb.fr',
+    url='https://git.guiotte.fr/Florent/Idefix',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
+    packages=['idefix', 'idefix.tools'],
+    entry_points = {'console_scripts':['txt2npz = idefix.tools.txt_to_npz:main',]},
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved',
+        'Operating System :: OS Independent',
+    ],
+    python_requires='>=3.6',
+    install_requires=[
+        'numpy',
+        'sap',
+        'tqdm',
+        'matplotlib',
+        'pathlib',
+        'rasterio'
+    ],
       )

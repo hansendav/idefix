@@ -11,6 +11,13 @@ import numpy as np
 import pytest
 from idefix import utils
 
+@pytest.fixture
+def ma_raster():
+    rs = np.random.RandomState(42)
+    raster = rs.random((10,10))
+    raster = np.ma.array(raster, mask=raster<.1)
+    return raster
+
 @pytest.mark.parametrize("first_input,first_expected", [
     (1, -1),
     (-4, 4),
@@ -30,3 +37,9 @@ def test_bbox(fix_data):
 def test_read(datadir):
     with open(datadir.join('first.txt')) as f:
         assert f.read() == 'hullo\n'
+
+@pytest.mark.parametrize('method', 
+        ['nearest', 'linear', 'cubic', 'idw'])
+def test_interpolate(ma_raster, method):
+    utils.interpolate(ma_raster, method)
+    
