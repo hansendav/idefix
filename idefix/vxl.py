@@ -12,7 +12,6 @@ import logging
 import numpy as np
 import humanize
 from .utils import bbox
-import mayavi.mlab as mlab
 
 log = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ def bin(grid, spatial, feature=None, method='density'):
         - 'mean': The mean of feature value in each cell.
         - 'mode': The modal (most common) in each cell. Designed for labels on
           point cloud, can be long with rich spectral data. If there is an
-          equal number of elements, then the smallest is returned.
+          equal number of elements, the smallest is returned.
         The default is 'density'.
 
     Returns
@@ -371,6 +370,8 @@ def plot(voxel_grid, vmin=None, vmax=None):
     >>> mlab.savefig(fname, magnification=4)
     >>> mlab.show()
     """
+    import mayavi.mlab as mlab
+
     points = np.where(~voxel_grid.mask)
 
     if vmin or vmax:

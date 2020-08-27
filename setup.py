@@ -36,6 +36,9 @@ setuptools.setup(
         'tqdm',
         'matplotlib',
         'pathlib',
-        'rasterio'
+        'rasterio',
+        'laspy',
+        'humanize',
+        #'mayavi', Optional, for vxl.plot()
     ],
       )
