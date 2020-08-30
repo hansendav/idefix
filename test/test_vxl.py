@@ -75,6 +75,7 @@ def data_grid(datadir, set_id, step_id):
     ('0', .7, '0_7'),
     ('0', .15, '0_15'),
     ('0', [1.,1.,2.] , '1-1-2'),
+    ('0', [1.,1.,None] , '1-1-n'),
 ])
 def test_get_grid(datadir, set_id, step, grid_id):
     spatial = data_pc(datadir, set_id).spatial

@@ -29,7 +29,7 @@ def _ui_step(step, spatial):
         out_step = [step] * spatial.shape[-1]
 
     for s in out_step:
-        if s <= 0:
+        if s and s <= 0:
             msg = 'Step should be greater than 0, steps = \'{}\'.'.format(step)
             log.error(msg)
             raise ValueError(msg)
@@ -62,8 +62,11 @@ def get_grid(spatial, step):
     grid = []
     for a_min, a_max, a_s in zip(bb[0], bb[1], step):
         # Beware of float underflow
-        bins = np.trunc((a_max - a_min) / a_s).astype(int) + 1
-        grid += [np.linspace(a_min, a_min + bins * a_s, bins + 1)]
+        if a_s:
+            bins = np.trunc((a_max - a_min) / a_s).astype(int) + 1
+            grid += [np.linspace(a_min, a_min + bins * a_s, bins + 1)]
+        else:
+            grid += [np.array((a_min, a_max + 1))]
 
     return grid
 

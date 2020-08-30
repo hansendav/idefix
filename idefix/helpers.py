@@ -15,6 +15,7 @@ import numpy as np
 from scipy.interpolate import griddata
 from rasterio import fill
 import sap
+import higra as hg
 
 from .vxl import get_grid, bin, squash
 
@@ -87,3 +88,50 @@ def dsm(pcloud, cell_size=1., last=False):
     rstr = interpolate(rstr, 'idw')
 
     return rstr
+
+def dtm_dh_filter(dsm, sigma=.5, epsilon=20000, alpha=2):
+    """Compute a digital terrain model (DTM) from a DSM.
+
+    Work best with DSM of last echo.
+
+    Parameters
+    ----------
+    dsm : ndarray
+        The DSM.
+    sigma : scalar
+        The height theshold to trigger object detection. Default is 
+        0.5 m.
+    epsilon : scalar
+        The area theshold for ground objects. All objects with surface
+        greater than epsilon are forcedto be ground. Default is 20 km².
+    alpha : scalar
+        The area threshold for horizontal noise filter. Area variations
+        smaller than alpha are removed for the detection of height
+        threshold sigma. Default is 2 m².
+
+    Returns
+    -------
+    dtm : ndarray
+        The DTM computed from the DSM.
+
+    """
+    mt = sap.MaxTree(dsm)
+    area = mt.get_attribute('area')
+    
+    area_child = hg.accumulate_parallel(mt._tree, area, hg.Accumulators.max)
+    pruned = (area - area_child) <= alpha
+
+    pruned_tree, pruned_map = hg.simplify_tree(mt._tree, pruned)
+    
+    dh = mt._alt[pruned_map] - mt._alt[pruned_map][pruned_tree.parents()]
+    remove = dh > sigma
+
+    original_map = np.zeros(mt.num_nodes(), dtype=np.int)
+    original_map[pruned_map] = np.arange(pruned_map.size)
+    original_map = hg.accumulate_and_max_sequential(mt._tree, original_map, np.arange(mt._tree.num_leaves()), hg.Accumulators.max)
+    original_remove = remove[original_map] & (area < epsilon)
+    
+    dtm = mt.reconstruct(original_remove, filtering='min')
+    
+    return dtm
+

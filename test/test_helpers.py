@@ -39,3 +39,8 @@ def test_dsm(datadir, params):
 
     assert dsm is not None, 'Did not return anything...'
     assert not np.isnan(dsm).any(), 'Some missing values in DSM'
+
+def test_dtm(ma_raster):
+    dtm = helpers.dtm_dh_filter(ma_raster)
+
+    assert dtm is not None, 'Did not return anything...'
