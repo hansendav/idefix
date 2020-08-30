@@ -44,10 +44,12 @@ def get_grid(spatial, step):
     Parameters
     ----------
     spatial : array (m, n)
-        The spatial point cloud or the corresponding bounding box to grid.
+        The spatial point cloud or the corresponding bounding box to
+        grid.
     step : number or array or tuple
-        The step of the grid, can be a number to get an isotropic grid, or an
-        iterable of size 3 (required) to get an anisotropic grid.
+        The step of the grid, can be a number to get an isotropic grid,
+        or an iterable of size 3 (required) to get an anisotropic grid.
+        Value can be `None` to define an undivided axis.
 
     Returns
     -------
