@@ -27,6 +27,11 @@ def test_bbox(fix_data):
     res = np.array([fix_data.min(axis=0), fix_data.max(axis=0)])
     assert (utils.bbox(fix_data) == res).all()
 
+def test_fit_bbox(fix_data):
+    res = np.array([[0, 0, 0],
+                    [1, 1, 1]])
+    assert (utils.fit_bbox(fix_data) == res).all()
+
 def test_read(datadir):
     with open(datadir.join('first.txt')) as f:
         assert f.read() == 'hullo\n'

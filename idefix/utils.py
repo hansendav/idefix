@@ -87,10 +87,10 @@ def fit_bbox(data, decimals=0):
     --------
     bbox : Returns a raw bounding box on the data.
     """
-    bbox = bbox(data)
+    raw_bbox = bbox(data)
 
-    nbbox = np.round(bbox, decimals)
-    nbbox[0,2] = np.floor(bbox * 10 ** decimals)[0,2] / 10 ** decimals
-    nbbox[1,2] = np.ceil(bbox * 10 ** decimals)[1,2] / 10 ** decimals
+    nbbox = np.round(raw_bbox, decimals)
+    nbbox[0,2] = np.floor(raw_bbox * 10 ** decimals)[0,2] / 10 ** decimals
+    nbbox[1,2] = np.ceil(raw_bbox * 10 ** decimals)[1,2] / 10 ** decimals
 
     return nbbox
