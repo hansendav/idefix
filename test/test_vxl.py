@@ -86,7 +86,14 @@ def test_get_grid(datadir, set_id, step, grid_id):
     assert res is not None, 'Test data empty, test function is broken!'
     assert len(res) == 3, 'Test data malformed, test function is broken!'
 
-    test = vxl.get_grid(spatial, step)
+    bbox = vxl.bbox(spatial)
+    try:
+        bbox[1,:] += step * 1.01
+    except:
+        # Workaround for the None on last axis
+        bbox[1,:] += step[0]
+
+    test = vxl.get_grid(bbox, step)
 
     assert test is not None, 'Function did not return anything :('
     assert len(test) == 3, 'Function doesn\'t give right number of axis'
@@ -178,7 +185,7 @@ def test__geo_to_np_coordinate():
     raster_truth[0, -1] = 25
     raster_truth[-1, 2] = 7
 
-    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 2D raters' 
+    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 2D raters'
 
     raster = np.zeros((5, 5, 3), dtype=np.uint8)
     raster[0, 0, 0] = 42
@@ -190,7 +197,7 @@ def test__geo_to_np_coordinate():
     raster_truth[0, -1, 1] = 25
     raster_truth[-1, 2, 2] = 7
 
-    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 3D raters' 
+    assert (raster_truth == vxl._geo_to_np_coordinate(raster)).all(), 'Missmatch between 3D raters'
 
 @pytest.mark.parametrize('set_id, grid_id, axis, method', [
     (1, 1, 2, 'top'),

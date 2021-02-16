@@ -11,7 +11,7 @@ General functions to transform point clouds to voxels compatible with numpy.
 import logging
 import numpy as np
 import humanize
-from .utils import bbox
+from .utils import bbox, fit_bbox
 
 log = logging.getLogger(__name__)
 
@@ -38,8 +38,8 @@ def _ui_step(step, spatial):
 def get_grid(spatial, step):
     '''Return grid bins.
 
-    Compute the grid bins of a point cloud or the corresponding bounding box
-    according to given step (or steps for anisotropic grid).
+    Compute the grid bins of a point cloud or the corresponding bounding
+    box according to given step (or steps for anisotropic grid).
 
     Parameters
     ----------
@@ -54,8 +54,26 @@ def get_grid(spatial, step):
     Returns
     -------
     grid : array of array (n,)
-        Grid of spatial given step. Return three arrays (not necessarily of the
-        same size) defining the bins of axis `x`, `y` and `z`.
+        Grid of spatial given step. Return three arrays (not necessarily
+        of the same size) defining the bins of axis `x`, `y` and `z`.
+
+    Notes
+    -----
+    The grid is built considering the half-open interval
+    $[min_of_the_axis, max_of_the_axis)$. If the positions of the points
+    are directly used as spatial parameter, the points at the upper
+    limits will be excluded from further processing.
+
+    You can define a more precise bounding box to take into account all
+    the points of your dataset (e.g. by adding a small distance on the
+    upper limits).
+
+    See Also
+    --------
+    bbox : Returns the raw bounding box of the point cloud (excluding
+        points on upper limit).
+    fit_bbox : Returns a bounding box on rounded coordinates (can
+        include all the points).
     '''
     spatial = np.array(spatial)
     bb = bbox(spatial)
@@ -65,7 +83,7 @@ def get_grid(spatial, step):
     for a_min, a_max, a_s in zip(bb[0], bb[1], step):
         # Beware of float underflow
         if a_s:
-            bins = np.trunc((a_max - a_min) / a_s).astype(int) + 1
+            bins = np.trunc((a_max - a_min) / a_s).astype(int)
             grid += [np.linspace(a_min, a_min + bins * a_s, bins + 1)]
         else:
             grid += [np.array((a_min, a_max + 1))]
@@ -347,7 +365,7 @@ def squash(voxel_grid, method='top', axis=-1):
         return voxel_grid.max(axis=axis)
     elif method == 'std':
         return voxel_grid.std(axis=axis)
-    
+
     raise NotImplementedError('Method \'{}\' does not exist.'.format(method))
 
 def plot(voxel_grid, vmin=None, vmax=None):

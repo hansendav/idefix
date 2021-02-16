@@ -55,5 +55,42 @@ def bbox(data):
 
         [[xmin, ymin, zmin],
          [xmax, ymax, zmax]]
+
+    See Also
+    --------
+    fit_bbox : Return a bounding box fit on fixed coordinates.
     """
     return np.array((np.min(data, axis=0), np.max(data, axis=0)))
+
+def fit_bbox(data, decimals=0):
+    """Return a bounding box fit on fixed coordinates.
+
+    - Round $x$ and $y$ coordinates to match most orthoimagery tiles.
+    - Ceil and floor $z$ coordinates to include all the point on the vertical axis.
+
+    Parameters
+    ----------
+    data : ndarray (N, 3)
+        Bbox or point cloud data of shape (N, 3), i.e. (x,y,z).
+    decimals : int
+        The precision for the rounding, ceiling and flooring operations.
+
+    Returns
+    -------
+    bbox : ndarray
+        Lower and upper points describing the bounding box such as::
+
+        [[xmin, ymin, zmin],
+         [xmax, ymax, zmax]]
+
+    See Also
+    --------
+    bbox : Returns a raw bounding box on the data.
+    """
+    bbox = bbox(data)
+
+    nbbox = np.round(bbox, decimals)
+    nbbox[0,2] = np.floor(bbox * 10 ** decimals)[0,2] / 10 ** decimals
+    nbbox[1,2] = np.ceil(bbox * 10 ** decimals)[1,2] / 10 ** decimals
+
+    return nbbox
