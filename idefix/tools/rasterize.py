@@ -16,7 +16,7 @@ from pathlib import Path
 
 import idefix as ix
 
-parser = argparse.ArgumentParser(description='Compute features rasters from LiDAR point cloud.',
+parser = argparse.ArgumentParser(description='Compute features rasters from .npz point cloud.',
                                  formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog="""
 The config file can contain any parameters of the
@@ -78,7 +78,7 @@ def main():
 
 
     config = {'global': {'out_dir': out_dir}}
-    config |= json.load(open(args.c)) if args.c else {}
+    config.update(json.load(open(args.c)) if args.c else {})
 
     globalc = config['global']
     rasters = config['rasters'] if 'rasters' in config else [{}]
@@ -87,8 +87,8 @@ def main():
     for pc_file in pc_files:
         for raster in rasters:
             job = globalc.copy()
-            job |= raster
-            job |= {'pc_file': pc_file}
+            job.update(raster)
+            job.update({'pc_file': pc_file})
             queue += [job]
 
     pool = Pool(processes=args.n)
