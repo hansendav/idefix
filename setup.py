@@ -15,7 +15,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='idefix',
-    version='0.1.5',
+    version='0.2.0',
     description='Utils and processing pipelines for LiDAR point clouds',
     author='Florent Guiotte',
     author_email='florent.guiotte@uhb.fr',
@@ -23,7 +23,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=['idefix', 'idefix.tools'],
-    entry_points = {'console_scripts':['txt2npz = idefix.tools.txt_to_npz:main',]},
+    entry_points = {'console_scripts':[
+        'txt2npz=idefix.tools.txt_to_npz:main',
+        'rasterize=idefix.tools.rasterize:main',
+    ]},
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved',

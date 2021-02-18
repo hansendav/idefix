@@ -16,7 +16,7 @@ from pathlib import Path
 
 import idefix as ix
 
-parser = argparse.ArgumentParser(description='Compute features rasters from .npz point cloud.',
+parser = argparse.ArgumentParser(description='Compute features rasters from LiDAR point cloud.',
                                  formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog="""
 The config file can contain any parameters of the
