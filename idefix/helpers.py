@@ -208,7 +208,7 @@ def rasterize(pc_file, feature='elevation', resolution=1.,
 
     vxl = bin(grid, pc.spatial, fval, bin_method)
 
-    squash_method = squash_method if isinstance(squash_method, tuple) else (squash_method,)
+    squash_method = squash_method if not isinstance(squash_method, str) else (squash_method,)
 
     rasters = []
     for s in squash_method:
