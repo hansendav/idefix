@@ -44,3 +44,16 @@ def test_dtm(ma_raster):
     dtm = helpers.dtm_dh_filter(ma_raster)
 
     assert dtm is not None, 'Did not return anything...'
+
+@pytest.mark.parametrize('params', [
+    {},
+    {'bin_structure': 'pixel'},
+    {'out_dir': True, 'crs': 'EPSG:26910'}])
+def test_rasterize(datadir, params):
+    # Workaround for out_dir with pytest
+    if 'out_dir' in params:
+        params['out_dir'] = datadir
+
+    raster = helpers.rasterize(datadir.join('test.npz'), **params)
+
+    assert raster is not None, 'Did not return anything...'

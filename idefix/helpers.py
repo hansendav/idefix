@@ -14,10 +14,13 @@ exemple on the use of idefix package and other packages (sap, rasterio,
 import numpy as np
 from scipy.interpolate import griddata
 from rasterio import fill
+import rasterio as rio
 import sap
 import higra as hg
+from pathlib import Path
 
-from .vxl import get_grid, bin, squash
+from .vxl import get_grid, bin, squash, fit_bbox
+from .io import load_pc
 
 def interpolate(raster, method='linear'):
     """Interpolate masked raster.
@@ -99,7 +102,7 @@ def dtm_dh_filter(dsm, sigma=.5, epsilon=20000, alpha=2):
     dsm : ndarray
         The DSM.
     sigma : scalar
-        The height theshold to trigger object detection. Default is 
+        The height theshold to trigger object detection. Default is
         0.5 m.
     epsilon : scalar
         The area theshold for ground objects. All objects with surface
@@ -117,12 +120,12 @@ def dtm_dh_filter(dsm, sigma=.5, epsilon=20000, alpha=2):
     """
     mt = sap.MaxTree(dsm)
     area = mt.get_attribute('area')
-    
+
     area_child = hg.accumulate_parallel(mt._tree, area, hg.Accumulators.max)
     pruned = (area - area_child) <= alpha
 
     pruned_tree, pruned_map = hg.simplify_tree(mt._tree, pruned)
-    
+
     dh = mt._alt[pruned_map] - mt._alt[pruned_map][pruned_tree.parents()]
     remove = dh > sigma
 
@@ -130,8 +133,98 @@ def dtm_dh_filter(dsm, sigma=.5, epsilon=20000, alpha=2):
     original_map[pruned_map] = np.arange(pruned_map.size)
     original_map = hg.accumulate_and_max_sequential(mt._tree, original_map, np.arange(mt._tree.num_leaves()), hg.Accumulators.max)
     original_remove = remove[original_map] & (area < epsilon)
-    
+
     dtm = mt.reconstruct(original_remove, filtering='min')
-    
+
     return dtm
 
+def write_raster(raster, bbox, crs, fname):
+    """Write a GeoTiff
+    """
+    west, east = bbox[:,0]
+    south, north = bbox[:,1]
+    width, height = raster.shape
+
+    west, east, south, north, width, height
+
+    transform = rio.transform.from_bounds(west, south, east, north, width, height)
+    dtype = raster.dtype
+
+    with rio.open(fname,
+                     mode='w',
+                     driver='GTiff',
+                     width=raster.shape[0],
+                     height=raster.shape[1],
+                     count=1,
+                     crs=crs,
+                     dtype=dtype,
+                     transform=transform,
+                     compress='lzw') as out_tif:
+        out_tif.write(raster[None])
+
+def rasterize(pc_file, feature='elevation', resolution=1.,
+              bin_structure='voxel', bin_method='mean',
+              squash_method='top', interpolation='idw',
+              out_dir=None, crs=None):
+    """Rasterize a point cloud file.
+
+    Parameters
+    ----------
+    pc_file : Path
+        Path of the point cloud file.
+    feature : str
+        'elevation' or LiDAR feature name contained in the point cloud
+        file.
+    resolution : float
+        The spatial resolution of the raster.
+    bin_structure : str
+        'voxel' or 'pixel'.
+    bin_method : str
+        'mean', 'density' or 'mode'.
+    squash_method : str or tuple of str
+        'top', 'center', 'bottom', 'min', 'max', 'mean', 'median', 'std'
+    interpolation : str
+        'idw', 'nearest', 'linear', 'cubic'
+    out_dir : Path or str or None
+        Path of the directory for the result files. Optional.
+    crs : str or None
+        The coordinate reference system of the point cloud. Required if
+        out_dir is defined to write the GeoTiff.
+
+    Returns
+    -------
+    raster : ndarray
+        Raster.
+    """
+    pc = load_pc(pc_file)
+
+    steps = resolution if bin_structure == 'voxel' else (resolution, resolution, None)
+
+    bbox = fit_bbox(pc.spatial)
+    grid = get_grid(bbox, steps)
+    #ix.vxl.insight(grid, method=bin_method, verbose=True)
+
+    fval = pc.spatial[:,2] if feature == 'elevation' else getattr(pc.feature, feature)
+
+    vxl = bin(grid, pc.spatial, fval, bin_method)
+
+    squash_method = squash_method if isinstance(squash_method, tuple) else (squash_method,)
+
+    rasters = []
+    for s in squash_method:
+        raster = squash(vxl, s)
+        raster = interpolate(raster, interpolation)
+        if out_dir:
+            format_dict = {'name': Path(pc_file).stem,
+                           'feature': feature,
+                           'resolution': resolution,
+                           'bin_structure': bin_structure,
+                           'bin_method': bin_method,
+                           'squash_method': s,
+                           'interpolation': interpolation}
+            out_tif_name = Path(out_dir) / \
+            '{name}_{feature}_{resolution}_{bin_structure}_{bin_method}_{squash_method}_{interpolation}.tif'.format(**format_dict)
+            write_raster(raster, bbox, crs, out_tif_name)
+        rasters += [raster]
+
+    return np.array(rasters)
