@@ -78,7 +78,9 @@ def main():
 
 
     config = {'global': {'out_dir': out_dir}}
-    config.update(json.load(open(args.c)) if args.c else {})
+    config_json = json.load(open(args.c)) if args.c else {}
+    config['global'].update(config_json['global'] if 'global' in config_json else {})
+    config['rasters'] = config_json['rasters'] if 'rasters' in config_json else {}
 
     globalc = config['global']
     rasters = config['rasters'] if 'rasters' in config else [{}]
