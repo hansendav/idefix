@@ -40,7 +40,7 @@ setuptools.setup(
         'matplotlib',
         'pathlib',
         'rasterio',
-        'laspy',
+        'laspy==1.7.0',
         'humanize',
         #'mayavi', Optional, for vxl.plot()
     ],
