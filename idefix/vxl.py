@@ -187,26 +187,26 @@ def _bin_insight(grid):
     '''
     return np.prod([x.size - 1 for x in grid])
 
-def _bin_density_insight(grid, dtype=np.float):
+def _bin_density_insight(grid, dtype=float):
     density = np.dtype(dtype).itemsize
     res_data = density
     res_mask = np.dtype(np.bool).itemsize
     return _bin_insight(grid) * (density + res_data + res_mask)
 
 def _bin_mean_insight(grid, feature=None):
-    density = np.dtype(np.float).itemsize
-    weight = np.dtype(np.float).itemsize
+    density = np.dtype(float).itemsize
+    weight = np.dtype(float).itemsize
     mask = np.dtype(np.bool).itemsize
-    res_data = np.dtype(np.float).itemsize
-    res_mask = np.dtype(np.float).itemsize
+    res_data = np.dtype(float).itemsize
+    res_mask = np.dtype(float).itemsize
     return (density + weight + mask + res_data + res_mask) * _bin_insight(grid)
 
 def _bin_mode_insight(grid, feature=None):
-    max_score = np.dtype(np.float).itemsize
-    max_value = np.dtype(np.float).itemsize
-    score = np.dtype(np.float).itemsize
+    max_score = np.dtype(float).itemsize
+    max_value = np.dtype(float).itemsize
+    score = np.dtype(float).itemsize
     winner = np.dtype(np.bool).itemsize
-    res_data = np.dtype(np.float).itemsize
+    res_data = np.dtype(float).itemsize
     res_mask = np.dtype(np.bool).itemsize
     return _bin_insight(grid) * (max_score + max_value + max(score + winner, res_data + res_mask))
 

@@ -49,7 +49,7 @@ def load_las(fname):
 
     log.debug('Extract spatial data')
     spatial = np.core.records.fromarrays([np.array((infile.x, infile.y, infile.z)).T],
-                                         dtype=[('spatial', np.float, 3)])
+                                         dtype=[('spatial', float, 3)])
 
     log.debug('Extract feature data')
     feature_data, feature_dtype = [], []
@@ -131,13 +131,13 @@ def load_txt(fname, header, delimiter=' ', dtype=None):
         log.error(msg)
         raise IOError(msg)
 
-    dtype = (np.float,) * len(header) if not dtype else dtype
+    dtype = (float,) * len(header) if not dtype else dtype
     processed_dtype = [(x, y) for x, y in zip(header, dtype)]
     raw_txt = np.loadtxt(fname, delimiter=delimiter, dtype=processed_dtype)
 
     log.debug('Extract spatial data')
     spatial = np.core.records.fromarrays([np.array([raw_txt[x] for x in ('x', 'y', 'z')]).T],
-                                         dtype=[('spatial', np.float, 3)])
+                                         dtype=[('spatial', float, 3)])
 
     log.debug('Extract feature data')
     header_c = list(header)
