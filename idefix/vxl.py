@@ -297,7 +297,7 @@ def _np_to_geo_coordinate(raster):
     return np.swapaxes(np.flip(raster, 0), 1, 0)
 
 def _squash_position(voxel_grid, method, axis):
-    squash_mask = np.zeros_like(voxel_grid, dtype=np.int)
+    squash_mask = np.zeros_like(voxel_grid, dtype=int)
     mask_idx = (~voxel_grid.mask).nonzero()
     squash_mask[mask_idx] = mask_idx[axis]
 
